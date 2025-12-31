@@ -2,9 +2,11 @@ name: CI – NeoHealth
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   backend:
@@ -41,30 +43,32 @@ jobs:
         working-directory: frontend
         run: npm install --legacy-peer-deps
 
-      - name: Build frontend (disable CI warnings)
+      - name: Build frontend
         working-directory: frontend
-        run: |
-          CI=false npm run build
+        run: CI=false npm run build
 
   docker-build:
-    name: Docker – build backend & frontend
+    name: Docker – build images
     runs-on: ubuntu-latest
-    needs: [backend, frontend]
+    needs:
+      - backend
+      - frontend
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build backend Docker image
-        run: docker build -t neohealth-backend-ci ./backend
+      - name: Build backend image
+        run: docker build -t backend-ci ./backend
 
-      - name: Build frontend Docker image
-        run: docker build -t neohealth-frontend-ci ./frontend
+      - name: Build frontend image
+        run: docker build -t frontend-ci ./frontend
 
-   docker-publish:
+  docker-publish:
     name: Docker – push images to Docker Hub
     runs-on: ubuntu-latest
-    needs: [docker-build]
+    needs:
+      - docker-build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
@@ -100,5 +104,3 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/hopital-frontend:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/hopital-frontend:${{ github.sha }}
-#123
-#456
