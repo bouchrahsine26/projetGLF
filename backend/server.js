@@ -76,7 +76,7 @@ app.use((req, res, next) => {
 /* =========================
    Connexion MongoDB
 ========================= */
-const dbURL = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/hospital";
+const dbURL = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/neohealth";
 
 mongoose
   .connect(dbURL)
