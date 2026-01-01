@@ -64,12 +64,16 @@ jobs:
       - name: Build frontend image
         run: docker build -t frontend-ci ./frontend
 
-  docker-publish:
+    docker-publish:
     name: Docker – push images to Docker Hub
     runs-on: ubuntu-latest
-    needs:
-      - docker-build
+    needs: [docker-build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    env:
+      DOCKERHUB_USER: ${{ secrets.DOCKER_USERNAME }}
+      BACK_IMAGE: hopital-backend
+      FRONT_IMAGE: hopital-frontend
 
     steps:
       - name: Checkout code
@@ -78,29 +82,29 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ env.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Build backend image
         run: |
           docker build \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/hopital-backend:latest \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/hopital-backend:${{ github.sha }} \
+            -t $DOCKERHUB_USER/$BACK_IMAGE:latest \
+            -t $DOCKERHUB_USER/$BACK_IMAGE:${{ github.sha }} \
             ./backend
 
       - name: Build frontend image
         run: |
           docker build \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/hopital-frontend:latest \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/hopital-frontend:${{ github.sha }} \
+            -t $DOCKERHUB_USER/$FRONT_IMAGE:latest \
+            -t $DOCKERHUB_USER/$FRONT_IMAGE:${{ github.sha }} \
             ./frontend
 
       - name: Push backend image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/hopital-backend:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/hopital-backend:${{ github.sha }}
+          docker push $DOCKERHUB_USER/$BACK_IMAGE:latest
+          docker push $DOCKERHUB_USER/$BACK_IMAGE:${{ github.sha }}
 
       - name: Push frontend image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/hopital-frontend:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/hopital-frontend:${{ github.sha }}
+          docker push $DOCKERHUB_USER/$FRONT_IMAGE:latest
+          docker push $DOCKERHUB_USER/$FRONT_IMAGE:${{ github.sha }}
